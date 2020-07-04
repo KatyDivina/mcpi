@@ -31,3 +31,5 @@ coverage
 
 # Generated documentation
 docs/_build
+
+/.idea

@@ -88,6 +88,14 @@ class CmdPositioner:
         """Set a player setting (setting, status). keys: autojump"""
         self.conn.send(self.pkg + b".setting", setting, 1 if bool(status) else 0)
 
+    def getEyeLocation(self, id):
+
+        return self.conn.sendReceive(self.pkg + b".getEyeLocation", id)
+
+    def effect(self, id, *args):
+        self.conn.send(self.pkg + b".effect", id, args)
+
+
 class CmdEntity(CmdPositioner):
     """Methods for entities"""
     def __init__(self, connection):
@@ -170,6 +178,12 @@ class CmdPlayer(CmdPositioner):
     def getPitch(self):
         return CmdPositioner.getPitch(self, [])
 
+    def getEyeLocation(self):
+        return CmdPositioner.getEyeLocation(self, [])
+
+    def effect(self, effect, seconds, amplifier):
+        return CmdPositioner.effect(self, [], effect, seconds, amplifier)
+
     def getEntities(self, distance=10, typeId=-1):
         """Return a list of entities near entity (distanceFromPlayerInBlocks:int, typeId:int) => [[entityId:int,entityTypeId:int,entityTypeName:str,posX:float,posY:float,posZ:float]]"""
         """If distanceFromPlayerInBlocks:int is not specified then default 10 blocks will be used"""
@@ -247,8 +261,10 @@ class CmdEvents:
     def pollBlockHits(self):
         """Only triggered by sword => [BlockEvent]"""
         s = self.conn.sendReceive(b"events.block.hits")
+        print(s)
         events = [e for e in s.split("|") if e]
         return [BlockEvent.Hit(*list(map(int, e.split(",")))) for e in events]
+
 
     def pollChatPosts(self):
         """Triggered by posts to chat => [ChatEvent]"""

@@ -88,12 +88,17 @@ class CmdPositioner:
         """Set a player setting (setting, status). keys: autojump"""
         self.conn.send(self.pkg + b".setting", setting, 1 if bool(status) else 0)
 
-    def getEyeLocation(self, id):
+    def getTargetBlock(self, id):
 
-        return self.conn.sendReceive(self.pkg + b".getEyeLocation", id)
+        s = self.conn.sendReceive(self.pkg + b".getTargetBlock", id)
+        return [int(float(pos.split('=')[1])) for pos in s.split(",")[1:4]]
 
     def effect(self, id, *args):
         self.conn.send(self.pkg + b".effect", id, args)
+
+    def give(self, *args):
+         self.conn.send(self.pkg + b".give", id, args)
+
 
 
 class CmdEntity(CmdPositioner):
@@ -178,8 +183,8 @@ class CmdPlayer(CmdPositioner):
     def getPitch(self):
         return CmdPositioner.getPitch(self, [])
 
-    def getEyeLocation(self):
-        return CmdPositioner.getEyeLocation(self, [])
+    def getTargetBlock(self):
+        return CmdPositioner.getTargetBlock(self, [])
 
     def effect(self, effect, seconds, amplifier):
         return CmdPositioner.effect(self, [], effect, seconds, amplifier)
@@ -227,6 +232,10 @@ class CmdPlayer(CmdPositioner):
     def clearEvents(self):
         """Clear the players events"""
         self.conn.send(b"player.events.clear")
+
+    def give(self, item):
+        return CmdPositioner.give(self, [], item)
+
 
 class CmdCamera:
     def __init__(self, connection):
@@ -386,6 +395,9 @@ class Minecraft:
     def removeEntities(self, typeId=-1):
         """Remove entities all currently loaded Entities by type (typeId:int) => (removedEntitiesCount:int)"""
         return int(self.conn.sendReceive(b"world.removeEntities", typeId))
+
+    def dropItem(self, *args):
+        self.conn.send(b"world.dropItem", intFloor(args))
 
     @staticmethod
     def create(address = "localhost", port = 4711):
